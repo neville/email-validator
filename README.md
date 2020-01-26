@@ -5,4 +5,7 @@
 https://hub.docker.com/r/nevillekb/email-validator
 
 ## References
-Project structuring best practises - https://github.com/golang-standards/project-layout
+
+### Project structuring best practises 
+- https://github.com/golang-standards/project-layout
+- https://github.com/marvincaspar/go-web-app-boilerplate
