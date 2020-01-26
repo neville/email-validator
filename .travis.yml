@@ -1,5 +1,13 @@
 # .travis.yml
 language: go
+
 go:
     - 1.13.6
-    
+
+services:
+    - docker
+
+after_success:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - docker build -t "nevillekb/email-validator:0.4.0" --force-rm -f build/Dockerfile .
+    - docker push nevillekb/email-validator
