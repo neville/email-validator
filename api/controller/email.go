@@ -16,10 +16,10 @@ type Request struct {
 
 // Response ...
 type Response struct {
-	Valid      bool        `json:"valid"`
-	Validators validations `json:"validators"`
+	Valid      bool            `json:"valid"`
+	Validators validationTypes `json:"validators"`
 }
-type validations struct {
+type validationTypes struct {
 	Regexp regexValidator  `json:"regexp"`
 	Domain domainValidator `json:"domain"`
 	SMTP   smtpValidator   `json:"smtp"`
@@ -86,12 +86,17 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	response.Valid = isValid
 
 	// Returns
-	res, err := json.Marshal(response)
+	sendSuccessResponse(w, r, http.StatusOK, response)
+}
+
+func sendSuccessResponse(w http.ResponseWriter, r *http.Request, code int, res *Response) {
+	bytes, err := json.Marshal(res)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(res)
+	w.Write(bytes)
 }
