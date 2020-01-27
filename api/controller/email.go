@@ -45,19 +45,6 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	response := &Response{}
 	isValid := false
 
-	if request.Email == "" {
-		render.Status(r, http.StatusBadRequest)
-		return
-	}
-
-	// Extracts domain
-	addressSymbol := strings.Index(request.Email, "@")
-	if addressSymbol == -1 {
-		render.Status(r, http.StatusBadRequest)
-		return
-	}
-	domain := request.Email[addressSymbol:]
-
 	// Regex validation
 	isFormatValid, err := module.ValidateFormat(request.Email)
 	if err != nil {
@@ -65,6 +52,14 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.Validators.Regexp.Valid = isFormatValid
+
+	// Extracts domain
+	addressSymbolIndex := strings.Index(request.Email, "@")
+	if addressSymbolIndex == -1 {
+		render.Status(r, http.StatusBadRequest)
+		return
+	}
+	domain := request.Email[addressSymbolIndex+1:]
 
 	// Domain validation
 	isDomainValid, err := module.ValidateDomain(domain)

@@ -6,7 +6,7 @@ import (
 
 // ValidateFormat ...
 func ValidateFormat(email string) (matched bool, err error) {
-	matched, err = regexp.MatchString("", email)
+	matched, err = regexp.MatchString("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", email)
 	if err != nil {
 		return false, err
 	}
