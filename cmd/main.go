@@ -1,7 +1,7 @@
 package main
 
 import (
-	"email-validation/api/controller"
+	"email-validator/api/controller"
 	"net/http"
 	"os"
 

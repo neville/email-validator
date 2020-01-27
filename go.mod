@@ -1,4 +1,4 @@
-module email-validation
+module email-validator
 
 go 1.13
 

@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"email-validator/api/module"
+	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
 )
@@ -13,20 +16,24 @@ type Request struct {
 
 // Response ...
 type Response struct {
-	Valid      string `json:"valid"`
-	Validators struct {
-		Regexp struct {
-			Valid bool
-		} `json:"regexp"`
-		Domain struct {
-			Valid  bool
-			Reason string
-		} `json:"domain"`
-		SMTP struct {
-			Valid  bool
-			Reason string
-		} `json:"smtp"`
-	} `json:"validators"`
+	Valid      bool        `json:"valid"`
+	Validators validations `json:"validators"`
+}
+type validations struct {
+	Regexp regexValidator  `json:"regexp"`
+	Domain domainValidator `json:"domain"`
+	SMTP   smtpValidator   `json:"smtp"`
+}
+type regexValidator struct {
+	Valid bool `json:"valid"`
+}
+type domainValidator struct {
+	Valid  bool   `json:"valid"`
+	Reason string `json:"reason"`
+}
+type smtpValidator struct {
+	Valid  bool   `json:"valid"`
+	Reason string `json:"reason"`
 }
 
 // Validate ...
@@ -35,9 +42,56 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	request := &Request{}
 	render.DecodeJSON(r.Body, &request)
 
+	response := &Response{}
+	isValid := false
+
 	if request.Email == "" {
-		render.Status(r, http.StatusNotFound)
+		render.Status(r, http.StatusBadRequest)
+		return
 	}
 
-	w.Write([]byte("Validating email..."))
+	// Extracts domain
+	addressSymbol := strings.Index(request.Email, "@")
+	if addressSymbol == -1 {
+		render.Status(r, http.StatusBadRequest)
+		return
+	}
+	domain := request.Email[addressSymbol:]
+
+	// Regex validation
+	isFormatValid, err := module.ValidateFormat(request.Email)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		return
+	}
+	response.Validators.Regexp.Valid = isFormatValid
+
+	// Domain validation
+	isDomainValid, err := module.ValidateDomain(domain)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		return
+	}
+	response.Validators.Domain.Valid = isDomainValid
+
+	// SMTP validation
+	isSMTPValid, err := module.ValidateSMTP(domain)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		return
+	}
+	response.Validators.SMTP.Valid = isSMTPValid
+
+	// Overall validation
+	response.Valid = isValid
+
+	// Returns
+	res, err := json.Marshal(response)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
 }
