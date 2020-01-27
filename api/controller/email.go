@@ -38,15 +38,17 @@ type smtpValidator struct {
 
 // Validate ...
 func Validate(w http.ResponseWriter, r *http.Request) {
-	// Binds request data
-	request := &Request{}
-	render.DecodeJSON(r.Body, &request)
+	req, err := bindRequest(r)
+	if err != nil {
+		render.Status(r, http.StatusBadRequest)
+		return
+	}
 
 	response := &Response{}
 	isValid := false
 
 	// Regex validation
-	isFormatValid, err := module.ValidateFormat(request.Email)
+	isFormatValid, err := module.ValidateFormat(req.Email)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		return
@@ -54,12 +56,12 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	response.Validators.Regexp.Valid = isFormatValid
 
 	// Extracts domain
-	addressSymbolIndex := strings.Index(request.Email, "@")
+	addressSymbolIndex := strings.Index(req.Email, "@")
 	if addressSymbolIndex == -1 {
 		render.Status(r, http.StatusBadRequest)
 		return
 	}
-	domain := request.Email[addressSymbolIndex+1:]
+	domain := req.Email[addressSymbolIndex+1:]
 
 	// Domain validation
 	isDomainValid, err := module.ValidateDomain(domain)
@@ -82,6 +84,16 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	// Returns
 	sendSuccessResponse(w, r, http.StatusOK, response)
+}
+
+func bindRequest(r *http.Request) (request *Request, err error) {
+	request = &Request{}
+	render.DecodeJSON(r.Body, &request)
+	if err != nil {
+		return nil, err
+	}
+
+	return request, nil
 }
 
 func sendSuccessResponse(w http.ResponseWriter, r *http.Request, code int, res *Response) {
