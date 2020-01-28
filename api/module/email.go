@@ -1,7 +1,9 @@
 package module
 
 import (
+	"net"
 	"regexp"
+	"strings"
 )
 
 // ValidateFormat ...
@@ -15,11 +17,33 @@ func ValidateFormat(email string) (matched bool, err error) {
 }
 
 // ValidateDomain ...
-func ValidateDomain(domain string) (bool, error) {
+func ValidateDomain(email string) (bool, error) {
+	domain := extractDomain(email)
+
+	ipAddresses, err := net.LookupIP(domain)
+	if err != nil {
+		return false, err
+	}
+	if len(ipAddresses) > 0 {
+		return true, nil
+	}
+
 	return false, nil
 }
 
 // ValidateSMTP ...
-func ValidateSMTP(domain string) (bool, error) {
+func ValidateSMTP(email string) (bool, error) {
+	//domain := extractDomain(email)
+
 	return false, nil
+}
+
+func extractDomain(email string) (domain string) {
+	addressSymbolIndex := strings.Index(email, "@")
+	if addressSymbolIndex == -1 {
+		return
+	}
+
+	domain = email[addressSymbolIndex+1:]
+	return domain
 }

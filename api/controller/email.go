@@ -4,7 +4,6 @@ import (
 	"email-validator/api/module"
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/render"
 )
@@ -45,42 +44,34 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := &Response{}
-	isValid := false
 
 	// Regex validation
-	isFormatValid, err := module.ValidateFormat(req.Email)
+	response.Validators.Regexp.Valid, err = module.ValidateFormat(req.Email)
 	if err != nil {
-		render.Status(r, http.StatusInternalServerError)
+		response.Valid = false
 		return
 	}
-	response.Validators.Regexp.Valid = isFormatValid
-
-	// Extracts domain
-	addressSymbolIndex := strings.Index(req.Email, "@")
-	if addressSymbolIndex == -1 {
-		render.Status(r, http.StatusBadRequest)
-		return
-	}
-	domain := req.Email[addressSymbolIndex+1:]
 
 	// Domain validation
-	isDomainValid, err := module.ValidateDomain(domain)
+	response.Validators.Domain.Valid, err = module.ValidateDomain(req.Email)
 	if err != nil {
-		render.Status(r, http.StatusInternalServerError)
-		return
+		response.Valid = false
+		response.Validators.Domain.Reason = err.Error()
 	}
-	response.Validators.Domain.Valid = isDomainValid
 
 	// SMTP validation
-	isSMTPValid, err := module.ValidateSMTP(domain)
+	response.Validators.SMTP.Valid, err = module.ValidateSMTP(req.Email)
 	if err != nil {
-		render.Status(r, http.StatusInternalServerError)
-		return
+		response.Valid = false
+		response.Validators.SMTP.Reason = err.Error()
 	}
-	response.Validators.SMTP.Valid = isSMTPValid
 
 	// Overall validation
-	response.Valid = isValid
+	if response.Validators.Regexp.Valid &&
+		response.Validators.Domain.Valid &&
+		response.Validators.SMTP.Valid {
+		response.Valid = true
+	}
 
 	// Returns
 	sendSuccessResponse(w, r, http.StatusOK, response)
