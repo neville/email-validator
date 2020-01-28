@@ -33,7 +33,15 @@ func ValidateDomain(email string) (bool, error) {
 
 // ValidateSMTP ...
 func ValidateSMTP(email string) (bool, error) {
-	//domain := extractDomain(email)
+	domain := extractDomain(email)
+
+	mxRecrods, err := net.LookupMX(domain)
+	if err != nil {
+		return false, err
+	}
+	if mxRecrods != nil {
+		return true, nil
+	}
 
 	return false, nil
 }

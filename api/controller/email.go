@@ -28,11 +28,11 @@ type regexValidator struct {
 }
 type domainValidator struct {
 	Valid  bool   `json:"valid"`
-	Reason string `json:"reason"`
+	Reason string `json:"reason,omitempty"`
 }
 type smtpValidator struct {
 	Valid  bool   `json:"valid"`
-	Reason string `json:"reason"`
+	Reason string `json:"reason,omitempty"`
 }
 
 // Validate ...
