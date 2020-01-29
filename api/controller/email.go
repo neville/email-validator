@@ -39,7 +39,6 @@ type smtpValidator struct {
 func Validate(w http.ResponseWriter, r *http.Request) {
 	req, err := bindRequest(r)
 	if err != nil {
-		render.Status(r, http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +48,6 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	response.Validators.Regexp.Valid, err = module.ValidateFormat(req.Email)
 	if err != nil {
 		response.Valid = false
-		return
 	}
 
 	// Domain validation
