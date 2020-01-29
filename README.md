@@ -7,7 +7,7 @@
 https://hub.docker.com/r/nevillekb/email-validator
 
 **Command**  
-```docker run -t -p 8080:8080:127.0.0.1 -e PORT=8080 nevillekb/email-validator```
+```docker run -t -p 127.0.0.1:8080:8080 -e PORT=8080 nevillekb/email-validator```
 
 ## API documentation
 
@@ -43,6 +43,9 @@ Value - application/json
   }
 }
 ```
+
+**Example cURL request**  
+```curl -XPOST -H "Content-Type: application/json" -d '{"email":"xxx@yyy.zzz"}' http://localhost:8080/email/validate```
 
 ## References
 
